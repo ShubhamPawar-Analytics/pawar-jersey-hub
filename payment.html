@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-TG49VJLM');</script>
+  <!-- End Google Tag Manager -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment | Pawar's Jersey Hub</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-TG49VJLM"
+  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->
+  <header class="site-header" id="site-header">
+    <div class="header-inner">
+      <a href="index.html" class="site-logo" id="logo" data-cta="logo_click">Pawar's Jersey Hub</a>
+      <nav class="main-nav" id="main-nav" aria-label="Main navigation">
+        <ul>
+          <li><a href="index.html" id="nav-home" data-cta="nav_home">Home</a></li>
+          <li><a href="products.html" id="nav-products" data-cta="nav_products">Jerseys</a></li>
+          <li><a href="contact.html" id="nav-contact" data-cta="nav_contact">Contact</a></li>
+          <li><a href="signin.html" id="nav-signin" data-cta="nav_signin">Sign In</a></li>
+          <li><a href="cart.html" class="cart-link" id="nav-cart" data-cta="nav_cart">Cart <span class="cart-count hidden" id="cart-count-badge">0</span></a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main class="main-content" id="main-content">
+    <h1 class="page-title" id="page-title-payment">Payment</h1>
+    <div class="checkout-steps" data-step="payment_step">
+      <span class="checkout-step done">Cart</span>
+      <span class="checkout-step done">Checkout</span>
+      <span class="checkout-step active">Payment</span>
+      <span class="checkout-step">Done</span>
+    </div>
+
+    <!-- Order total (from cart) -->
+    <p class="mb-2" id="payment-order-total">Total: <strong id="payment-total-amount">—</strong></p>
+
+    <form id="payment-form" class="form-max-width" data-step="payment_form">
+      <div class="form-group payment-methods">
+        <label>Select payment method *</label>
+        <label class="payment-method selected">
+          <input type="radio" name="payment_method" value="cod" checked data-cta="payment_cod" />
+          Cash on Delivery (COD)
+        </label>
+        <label class="payment-method">
+          <input type="radio" name="payment_method" value="card" data-cta="payment_card" />
+          Card (Demo)
+        </label>
+        <label class="payment-method">
+          <input type="radio" name="payment_method" value="upi" data-cta="payment_upi" />
+          UPI (Demo)
+        </label>
+      </div>
+      <div class="form-actions">
+        <a href="checkout.html" class="btn btn-secondary" data-cta="back_to_checkout">Back to Checkout</a>
+        <button type="submit" class="btn btn-primary" id="payment-submit" data-cta="place_order">Place Order</button>
+      </div>
+    </form>
+  </main>
+
+  <footer class="site-footer" id="site-footer">
+    <div class="footer-inner">
+      <nav class="footer-nav" aria-label="Footer navigation">
+        <ul>
+          <li><a href="index.html" data-cta="footer_home">Home</a></li>
+          <li><a href="products.html" data-cta="footer_products">Jerseys</a></li>
+          <li><a href="contact.html" data-cta="footer_contact">Contact</a></li>
+          <li><a href="signin.html" data-cta="footer_signin">Sign In</a></li>
+        </ul>
+      </nav>
+      <div class="social-links" id="footer-social">
+        <a href="#" id="social-facebook" data-cta="social_facebook" aria-label="Facebook">Facebook</a>
+        <a href="#" id="social-twitter" data-cta="social_twitter" aria-label="Twitter">Twitter</a>
+        <a href="#" id="social-instagram" data-cta="social_instagram" aria-label="Instagram">Instagram</a>
+      </div>
+      <p class="copyright">&copy; Pawar's Jersey Hub. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="js/script.js"></script>
+  <script>
+    (function () {
+      if (typeof getCartCount !== 'undefined' && getCartCount() === 0) {
+        window.location.href = 'cart.html';
+      }
+      var totalEl = document.getElementById('payment-total-amount');
+      if (totalEl && typeof formatPrice !== 'undefined' && typeof getCartSubtotal !== 'undefined') {
+        totalEl.textContent = formatPrice(getCartSubtotal());
+      }
+      // Toggle .selected on payment method labels
+      document.querySelectorAll('.payment-method input').forEach(function (radio) {
+        radio.addEventListener('change', function () {
+          document.querySelectorAll('.payment-method').forEach(function (l) { l.classList.remove('selected'); });
+          this.closest('.payment-method').classList.add('selected');
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

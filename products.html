@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-TG49VJLM');</script>
+  <!-- End Google Tag Manager -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>All Jerseys | Pawar's Jersey Hub</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-TG49VJLM"
+  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->
+  <header class="site-header" id="site-header" data-section="header">
+    <div class="header-inner">
+      <a href="index.html" class="site-logo" id="logo" data-cta="logo_click">Pawar's Jersey Hub</a>
+      <nav class="main-nav" id="main-nav" aria-label="Main navigation">
+        <ul class="nav-list">
+          <li><a href="index.html" id="nav-home" data-cta="nav_home">Home</a></li>
+          <li><a href="products.html" id="nav-products" data-cta="nav_products">Jerseys</a></li>
+          <li><a href="contact.html" id="nav-contact" data-cta="nav_contact">Contact</a></li>
+          <li><a href="signin.html" id="nav-signin" data-cta="nav_signin">Sign In</a></li>
+          <li><a href="cart.html" class="cart-link" id="nav-cart" data-cta="nav_cart">Cart <span class="cart-count hidden" id="cart-count-badge" data-cart-count>0</span></a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main class="main-content" id="main-content" data-page="products_listing">
+    <h1 class="page-title" id="product-listing-title">All IPL Jerseys</h1>
+    <p class="product-listing-intro" id="product-listing-intro">Choose your team. Wear your pride.</p>
+
+    <!-- Filter / Sort toolbar - tracking-friendly -->
+    <div class="product-listing-toolbar" id="product-listing-toolbar" data-section="listing_toolbar">
+      <div class="toolbar-group">
+        <label for="sort-select" class="toolbar-label">Sort by</label>
+        <select id="sort-select" class="toolbar-select" name="sort" data-cta="sort_change" aria-label="Sort products">
+          <option value="default" id="sort-default">Default</option>
+          <option value="price_asc" id="sort-price-asc">Price: Low to High</option>
+          <option value="price_desc" id="sort-price-desc">Price: High to Low</option>
+        </select>
+      </div>
+      <div class="toolbar-group">
+        <label for="filter-team" class="toolbar-label">Filter by team</label>
+        <select id="filter-team" class="toolbar-select" name="team" data-cta="filter_team_change" aria-label="Filter by team">
+          <option value="" id="filter-all">All Teams</option>
+          <!-- Team options filled by JS -->
+        </select>
+      </div>
+    </div>
+
+    <!-- Product grid - all 10 jerseys, filled by JS -->
+    <div class="product-grid product-list-grid" id="product-list-grid" data-section="product_listing" data-step="product_listing" role="list">
+      <!-- Cards rendered by script.js -->
+    </div>
+
+    <p class="product-listing-empty hidden" id="product-listing-empty">No jerseys match your filter. Try another team.</p>
+  </main>
+
+  <footer class="site-footer" id="site-footer" data-section="footer">
+    <div class="footer-inner">
+      <nav class="footer-nav" aria-label="Footer navigation">
+        <ul>
+          <li><a href="index.html" id="footer-link-home" data-cta="footer_home">Home</a></li>
+          <li><a href="products.html" id="footer-link-products" data-cta="footer_products">Jerseys</a></li>
+          <li><a href="contact.html" id="footer-link-contact" data-cta="footer_contact">Contact</a></li>
+          <li><a href="signin.html" id="footer-link-signin" data-cta="footer_signin">Sign In</a></li>
+        </ul>
+      </nav>
+      <div class="footer-divider" aria-hidden="true"></div>
+      <div class="social-links" id="footer-social">
+        <a href="#" id="social-facebook" data-cta="social_facebook" aria-label="Facebook">Facebook</a>
+        <a href="#" id="social-twitter" data-cta="social_twitter" aria-label="Twitter">Twitter</a>
+        <a href="#" id="social-instagram" data-cta="social_instagram" aria-label="Instagram">Instagram</a>
+      </div>
+      <p class="copyright">&copy; Pawar's Jersey Hub. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="js/script.js"></script>
+</body>
+</html>

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-TG49VJLM');</script>
+  <!-- End Google Tag Manager -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact Us | Pawar's Jersey Hub</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-TG49VJLM"
+  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->
+  <header class="site-header" id="site-header" data-section="header">
+    <div class="header-inner">
+      <a href="index.html" class="site-logo" id="logo" data-cta="logo_click">Pawar's Jersey Hub</a>
+      <nav class="main-nav" id="main-nav" aria-label="Main navigation">
+        <ul class="nav-list">
+          <li><a href="index.html" id="nav-home" data-cta="nav_home">Home</a></li>
+          <li><a href="products.html" id="nav-products" data-cta="nav_products">Jerseys</a></li>
+          <li><a href="contact.html" id="nav-contact" data-cta="nav_contact" aria-current="page">Contact</a></li>
+          <li><a href="signin.html" id="nav-signin" data-cta="nav_signin">Sign In</a></li>
+          <li><a href="cart.html" class="cart-link" id="nav-cart" data-cta="nav_cart">Cart <span class="cart-count hidden" id="cart-count-badge" data-cart-count>0</span></a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main class="main-content" id="main-content" data-page="contact">
+    <section class="contact-section" id="contact-section" data-section="contact">
+      <h1 class="page-title contact-page-title" id="page-title-contact">Contact Us</h1>
+      <p class="contact-intro" id="contact-intro">Submit the form and we'll get back to you. A unique lead_id is generated on submit (stored in localStorage).</p>
+      <form id="contact-form" class="form-max-width contact-form" data-step="contact_form" data-section="contact_form">
+        <div id="contact-form-feedback" class="form-message hidden" role="alert" data-message-type="contact_feedback"></div>
+        <div class="form-group">
+          <label for="contact-name" id="label-contact-name">Name *</label>
+          <input type="text" id="contact-name" name="name" required placeholder="Your name" autocomplete="name" data-field="name" />
+        </div>
+        <div class="form-group">
+          <label for="contact-email" id="label-contact-email">Email *</label>
+          <input type="email" id="contact-email" name="email" required placeholder="your@email.com" autocomplete="email" data-field="email" />
+        </div>
+        <div class="form-group">
+          <label for="contact-subject" id="label-contact-subject">Subject</label>
+          <input type="text" id="contact-subject" name="subject" placeholder="Subject" data-field="subject" />
+        </div>
+        <div class="form-group">
+          <label for="contact-message-body" id="label-contact-message">Message *</label>
+          <textarea id="contact-message-body" name="message" required placeholder="Your message" data-field="message"></textarea>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" id="contact-submit" data-cta="contact_submit" data-step="send_message">Send Message</button>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <footer class="site-footer" id="site-footer" data-section="footer">
+    <div class="footer-inner">
+      <nav class="footer-nav" id="footer-nav" aria-label="Footer navigation">
+        <ul>
+          <li><a href="index.html" id="footer-link-home" data-cta="footer_home">Home</a></li>
+          <li><a href="products.html" id="footer-link-products" data-cta="footer_products">Jerseys</a></li>
+          <li><a href="contact.html" id="footer-link-contact" data-cta="footer_contact">Contact</a></li>
+          <li><a href="signin.html" id="footer-link-signin" data-cta="footer_signin">Sign In</a></li>
+        </ul>
+      </nav>
+      <div class="footer-divider" aria-hidden="true"></div>
+      <div class="social-links" id="footer-social" data-section="footer_social">
+        <a href="#" id="social-facebook" data-cta="social_facebook" data-platform="facebook" aria-label="Facebook">Facebook</a>
+        <a href="#" id="social-twitter" data-cta="social_twitter" data-platform="twitter" aria-label="Twitter">Twitter</a>
+        <a href="#" id="social-instagram" data-cta="social_instagram" data-platform="instagram" aria-label="Instagram">Instagram</a>
+      </div>
+      <p class="copyright" id="footer-copyright">&copy; Pawar's Jersey Hub. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="js/script.js"></script>
+</body>
+</html>

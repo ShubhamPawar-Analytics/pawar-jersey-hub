@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-TG49VJLM');</script>
+  <!-- End Google Tag Manager -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pawar's Jersey Hub | IPL Jerseys Store</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-TG49VJLM"
+  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->
+  <!-- Header: clean navigation with tracking-friendly IDs -->
+  <header class="site-header" id="site-header" data-section="header">
+    <div class="header-inner">
+      <a href="index.html" class="site-logo" id="logo" data-cta="logo_click" data-section="header_logo">Pawar's Jersey Hub</a>
+      <nav class="main-nav" id="main-nav" aria-label="Main navigation" data-section="main_nav">
+        <ul class="nav-list" id="nav-list">
+          <li><a href="index.html" id="nav-home" class="nav-link" data-cta="nav_home" data-page="home">Home</a></li>
+          <li><a href="products.html" id="nav-products" class="nav-link" data-cta="nav_products" data-page="products">Jerseys</a></li>
+          <li><a href="contact.html" id="nav-contact" class="nav-link" data-cta="nav_contact" data-page="contact">Contact</a></li>
+          <li><a href="signin.html" id="nav-signin" class="nav-link" data-cta="nav_signin" data-page="signin">Sign In</a></li>
+          <li><a href="cart.html" class="cart-link nav-link" id="nav-cart" data-cta="nav_cart" data-page="cart">Cart <span class="cart-count hidden" id="cart-count-badge" data-cart-count>0</span></a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main class="main-content" id="main-content" data-page="homepage">
+    <!-- Hero banner: clear hierarchy, tracking-friendly -->
+    <section class="hero" id="hero-banner" data-section="hero" data-step="hero">
+      <div class="hero-content">
+        <p class="hero-tagline" id="hero-tagline" data-content="tagline">Official IPL Store</p>
+        <h1 class="hero-title" id="hero-title">Welcome to Pawar's Jersey Hub</h1>
+        <p class="hero-description" id="hero-description">Support your favourite team in style. Premium official replica jerseys for all 10 IPL teams.</p>
+        <div class="hero-actions" id="hero-actions" data-step="hero_ctas">
+          <a href="products.html" class="btn btn-hero" id="cta-shop-now" data-cta="hero_shop_now" data-link-type="primary">Shop Jerseys</a>
+          <a href="contact.html" class="btn btn-hero-outline" id="cta-hero-contact" data-cta="hero_contact" data-link-type="secondary">Contact Us</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Featured products section -->
+    <section class="featured-section" id="featured-products" data-section="featured_products" data-step="featured_section">
+      <h2 class="section-title" id="featured-section-title" data-content="section_title">Featured Jerseys</h2>
+      <p class="section-intro" id="featured-section-intro">Handpicked fan favourites from this season. Click to view details and add to cart.</p>
+      <div class="product-grid" id="featured-product-grid" data-section="featured_grid" role="list">
+        <!-- Filled by JS from PRODUCTS (first 6) -->
+      </div>
+      <div class="featured-cta" id="featured-cta-wrapper">
+        <a href="products.html" class="btn btn-primary" id="cta-view-all" data-cta="view_all_products" data-link-type="primary">View All Jerseys</a>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer: links + social, tracking-friendly -->
+  <footer class="site-footer" id="site-footer" data-section="footer">
+    <div class="footer-inner">
+      <nav class="footer-nav" id="footer-nav" aria-label="Footer navigation" data-section="footer_nav">
+        <ul class="footer-nav-list" id="footer-nav-list">
+          <li><a href="index.html" id="footer-link-home" data-cta="footer_home" data-link-type="footer_nav">Home</a></li>
+          <li><a href="products.html" id="footer-link-products" data-cta="footer_products" data-link-type="footer_nav">Jerseys</a></li>
+          <li><a href="contact.html" id="footer-link-contact" data-cta="footer_contact" data-link-type="footer_nav">Contact</a></li>
+          <li><a href="signin.html" id="footer-link-signin" data-cta="footer_signin" data-link-type="footer_nav">Sign In</a></li>
+        </ul>
+      </nav>
+      <div class="footer-divider" aria-hidden="true"></div>
+      <div class="social-links" id="footer-social" data-section="footer_social">
+        <a href="#" id="social-facebook" class="social-link" data-cta="social_facebook" data-platform="facebook" aria-label="Follow us on Facebook">Facebook</a>
+        <a href="#" id="social-twitter" class="social-link" data-cta="social_twitter" data-platform="twitter" aria-label="Follow us on Twitter">Twitter</a>
+        <a href="#" id="social-instagram" class="social-link" data-cta="social_instagram" data-platform="instagram" aria-label="Follow us on Instagram">Instagram</a>
+      </div>
+      <p class="copyright" id="footer-copyright">&copy; Pawar's Jersey Hub. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="js/script.js"></script>
+  <script>
+    // Homepage: render featured products (first 6)
+    (function () {
+      var grid = document.getElementById('featured-product-grid');
+      if (grid && typeof PRODUCTS !== 'undefined') {
+        var featured = PRODUCTS.slice(0, 6);
+        featured.forEach(function (p) {
+          grid.insertAdjacentHTML('beforeend', getProductCardHTML(p, 'View Details'));
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-TG49VJLM');</script>
+  <!-- End Google Tag Manager -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout | Pawar's Jersey Hub</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-TG49VJLM"
+  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->
+  <header class="site-header" id="site-header">
+    <div class="header-inner">
+      <a href="index.html" class="site-logo" id="logo" data-cta="logo_click">Pawar's Jersey Hub</a>
+      <nav class="main-nav" id="main-nav" aria-label="Main navigation">
+        <ul>
+          <li><a href="index.html" id="nav-home" data-cta="nav_home">Home</a></li>
+          <li><a href="products.html" id="nav-products" data-cta="nav_products">Jerseys</a></li>
+          <li><a href="contact.html" id="nav-contact" data-cta="nav_contact">Contact</a></li>
+          <li><a href="signin.html" id="nav-signin" data-cta="nav_signin">Sign In</a></li>
+          <li><a href="cart.html" class="cart-link" id="nav-cart" data-cta="nav_cart">Cart <span class="cart-count hidden" id="cart-count-badge">0</span></a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main class="main-content" id="main-content">
+    <h1 class="page-title" id="page-title-checkout">Checkout</h1>
+    <!-- Funnel steps: Cart > Checkout > Payment > Done -->
+    <div class="checkout-steps" data-step="checkout_step">
+      <span class="checkout-step done">Cart</span>
+      <span class="checkout-step active">Checkout</span>
+      <span class="checkout-step">Payment</span>
+      <span class="checkout-step">Done</span>
+    </div>
+
+    <form id="checkout-form" class="form-max-width" data-step="checkout_form">
+      <div class="form-group">
+        <label for="checkout-name">Full Name *</label>
+        <input type="text" id="checkout-name" name="name" required placeholder="Your name" />
+      </div>
+      <div class="form-group">
+        <label for="checkout-email">Email *</label>
+        <input type="email" id="checkout-email" name="email" required placeholder="your@email.com" />
+      </div>
+      <div class="form-group">
+        <label for="checkout-address">Address *</label>
+        <textarea id="checkout-address" name="address" required placeholder="Street, area"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="checkout-city">City *</label>
+          <input type="text" id="checkout-city" name="city" required placeholder="City" />
+        </div>
+        <div class="form-group">
+          <label for="checkout-pincode">Pincode *</label>
+          <input type="text" id="checkout-pincode" name="pincode" required placeholder="PIN code" pattern="[0-9]{6}" />
+        </div>
+      </div>
+      <div class="form-actions">
+        <a href="cart.html" class="btn btn-secondary" data-cta="back_to_cart">Back to Cart</a>
+        <button type="submit" class="btn btn-primary" id="checkout-submit" data-cta="proceed_to_payment">Proceed to Payment</button>
+      </div>
+    </form>
+  </main>
+
+  <footer class="site-footer" id="site-footer">
+    <div class="footer-inner">
+      <nav class="footer-nav" aria-label="Footer navigation">
+        <ul>
+          <li><a href="index.html" data-cta="footer_home">Home</a></li>
+          <li><a href="products.html" data-cta="footer_products">Jerseys</a></li>
+          <li><a href="contact.html" data-cta="footer_contact">Contact</a></li>
+          <li><a href="signin.html" data-cta="footer_signin">Sign In</a></li>
+        </ul>
+      </nav>
+      <div class="social-links" id="footer-social">
+        <a href="#" id="social-facebook" data-cta="social_facebook" aria-label="Facebook">Facebook</a>
+        <a href="#" id="social-twitter" data-cta="social_twitter" aria-label="Twitter">Twitter</a>
+        <a href="#" id="social-instagram" data-cta="social_instagram" aria-label="Instagram">Instagram</a>
+      </div>
+      <p class="copyright">&copy; Pawar's Jersey Hub. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="js/script.js"></script>
+  <script>
+    // Optional: redirect if cart is empty
+    (function () {
+      if (typeof getCartCount !== 'undefined' && getCartCount() === 0) {
+        window.location.href = 'cart.html';
+      }
+    })();
+  </script>
+</body>
+</html>
