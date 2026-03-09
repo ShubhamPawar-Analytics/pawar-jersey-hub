@@ -138,8 +138,37 @@ const STORAGE_KEYS = {
   USERS: 'pawar_jersey_users',
   CURRENT_USER: 'pawar_jersey_current_user',
   LEADS: 'pawar_jersey_leads',
-  ORDER_ID: 'pawar_jersey_last_order_id'
+  ORDER_ID: 'pawar_jersey_last_order_id',
+  LAST_ORDER_DATA: 'pawar_jersey_last_order_data'
 };
+
+// ========== GA4 dataLayer (GTM) – e-commerce & conversion events ==========
+window.dataLayer = window.dataLayer || [];
+
+var GA4_CURRENCY = 'INR';
+
+/**
+ * Build GA4 ecommerce item from product/cart item (recommended item params)
+ */
+function ga4Item(p, index, quantity) {
+  var qty = quantity === undefined ? (p.quantity || 1) : quantity;
+  return {
+    item_id: p.product_id,
+    item_name: p.product_name,
+    price: Number(p.price),
+    quantity: Number(qty),
+    index: index === undefined ? 0 : index,
+    item_category: p.category || 'IPL Jersey',
+    item_brand: p.team || ''
+  };
+}
+
+/**
+ * Push ecommerce event and clear previous ecommerce (GA4 best practice)
+ */
+function pushDataLayer(obj) {
+  window.dataLayer.push(obj);
+}
 
 // ========== Cart (localStorage) ==========
 /**
@@ -461,6 +490,18 @@ function initProductListingPage() {
       emptyEl.classList.toggle('hidden', list.length > 0);
     }
     bindListingAddToCart();
+    // GA4: view_item_list
+    if (list.length > 0) {
+      pushDataLayer({
+        event: 'view_item_list',
+        ecommerce: {
+          currency: GA4_CURRENCY,
+          item_list_id: 'product_listing',
+          item_list_name: 'All IPL Jerseys',
+          items: list.map(function (p, i) { return ga4Item(p, i, 1); })
+        }
+      });
+    }
   }
 
   function bindListingAddToCart() {
@@ -468,25 +509,59 @@ function initProductListingPage() {
       btn.addEventListener('click', function (e) {
         e.preventDefault();
         const productId = this.getAttribute('data-product_id');
+        const product = getProductById(productId);
         addToCart(productId, 1, 'M');
         updateCartCountInHeader();
+        if (product) {
+          pushDataLayer({
+            event: 'add_to_cart',
+            ecommerce: {
+              currency: GA4_CURRENCY,
+              value: product.price,
+              items: [ga4Item(product, 0, 1)]
+            }
+          });
+        }
         this.textContent = 'Added';
         this.disabled = true;
-        setTimeout(() => {
+        setTimeout(function () {
           this.textContent = 'Add to Cart';
           this.disabled = false;
-        }, 1200);
+        }.bind(this), 1200);
       });
     });
   }
+
+  // GA4: select_item – when user clicks through to product detail from listing
+  grid.addEventListener('click', function (e) {
+    var link = e.target.closest('a[href*="product-detail.html"]');
+    if (!link) return;
+    var card = e.target.closest('.product-listing-card');
+    if (!card) return;
+    var productId = card.getAttribute('data-product_id');
+    var product = getProductById(productId);
+    if (!product) return;
+    var cards = grid.querySelectorAll('.product-listing-card');
+    var index = Array.prototype.indexOf.call(cards, card);
+    if (index < 0) index = 0;
+    pushDataLayer({
+      event: 'select_item',
+      ecommerce: {
+        item_list_id: 'product_listing',
+        item_list_name: 'All IPL Jerseys',
+        items: [ga4Item(product, index, 1)]
+      }
+    });
+  });
 
   if (sortSelect) sortSelect.addEventListener('change', render);
   if (filterSelect) filterSelect.addEventListener('change', render);
   render();
 }
 
-// ========== Initialize on DOM ready ==========
-document.addEventListener('DOMContentLoaded', function () {
+// ========== Initialize when DOM is ready ==========
+// Script is at end of body, so DOMContentLoaded may have already fired; run init immediately if so.
+function initWhenReady() {
   updateCartCountInHeader();
 
   // Product detail: render product from ?id= and add to cart form
@@ -498,6 +573,15 @@ document.addEventListener('DOMContentLoaded', function () {
     if (product) {
       productDetailContainer.innerHTML = renderProductDetail(product);
       bindProductDetailEvents(productDetailContainer, product);
+      // GA4: view_item
+      pushDataLayer({
+        event: 'view_item',
+        ecommerce: {
+          currency: GA4_CURRENCY,
+          value: product.price,
+          items: [ga4Item(product, 0, 1)]
+        }
+      });
     } else {
       productDetailContainer.innerHTML = '<p>Product not found.</p>';
     }
@@ -508,10 +592,50 @@ document.addEventListener('DOMContentLoaded', function () {
     initProductListingPage();
   }
 
+  // GA4: select_item from homepage featured list (when user clicks a product to view detail)
+  var featuredGrid = document.getElementById('featured-product-grid');
+  if (featuredGrid) {
+    featuredGrid.addEventListener('click', function (e) {
+      var link = e.target.closest('a[href*="product-detail.html"]');
+      if (!link) return;
+      var card = e.target.closest('.product-card');
+      if (!card) return;
+      var productId = card.getAttribute('data-product_id');
+      var product = getProductById(productId);
+      if (!product) return;
+      var cards = featuredGrid.querySelectorAll('.product-card');
+      var index = Array.prototype.indexOf.call(cards, card);
+      if (index < 0) index = 0;
+      pushDataLayer({
+        event: 'select_item',
+        ecommerce: {
+          item_list_id: 'featured',
+          item_list_name: 'Featured Jerseys',
+          items: [ga4Item(product, index, 1)]
+        }
+      });
+    });
+  }
+
   // Cart page: render cart and bind events
   const cartContainer = document.getElementById('cart-items-container');
   if (cartContainer) {
     renderCartPage(cartContainer);
+  }
+
+  // Checkout page: GA4 begin_checkout (when cart has items)
+  if (document.getElementById('checkout-form')) {
+    var checkoutCart = getCart();
+    if (checkoutCart.length > 0) {
+      pushDataLayer({
+        event: 'begin_checkout',
+        ecommerce: {
+          currency: GA4_CURRENCY,
+          value: getCartSubtotal(),
+          items: checkoutCart.map(function (item, i) { return ga4Item(item, i, item.quantity); })
+        }
+      });
+    }
   }
 
   // Checkout form submit
@@ -544,12 +668,35 @@ document.addEventListener('DOMContentLoaded', function () {
     contactForm.addEventListener('submit', handleContactSubmit);
   }
 
-  // Thank you page: show order id
+  // Thank you page: show order id and GA4 purchase
   const thankYouOrderId = document.getElementById('thank-you-order-id');
   if (thankYouOrderId) {
     thankYouOrderId.textContent = getLastOrderId() || 'N/A';
+    var lastOrder = null;
+    try {
+      var raw = sessionStorage.getItem(STORAGE_KEYS.LAST_ORDER_DATA);
+      if (raw) lastOrder = JSON.parse(raw);
+    } catch (err) {}
+    if (lastOrder && lastOrder.transaction_id) {
+      pushDataLayer({
+        event: 'purchase',
+        ecommerce: {
+          transaction_id: lastOrder.transaction_id,
+          currency: GA4_CURRENCY,
+          value: lastOrder.value,
+          items: lastOrder.items || []
+        }
+      });
+      sessionStorage.removeItem(STORAGE_KEYS.LAST_ORDER_DATA);
+    }
   }
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initWhenReady);
+} else {
+  initWhenReady();
+}
 
 function renderProductDetail(product) {
   const sizesOptions = product.sizes.map(s => `
@@ -591,9 +738,17 @@ function bindProductDetailEvents(container, product) {
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       const size = form.querySelector('input[name="size"]:checked');
-      const qty = form.querySelector('#qty');
       const qtyEl = form.querySelector('#product-quantity') || form.querySelector('#qty');
-      addToCart(product.product_id, parseInt(qtyEl && qtyEl.value ? qtyEl.value : 1, 10) || 1, size ? size.value : 'M');
+      var qty = parseInt(qtyEl && qtyEl.value ? qtyEl.value : 1, 10) || 1;
+      addToCart(product.product_id, qty, size ? size.value : 'M');
+      pushDataLayer({
+        event: 'add_to_cart',
+        ecommerce: {
+          currency: GA4_CURRENCY,
+          value: product.price * qty,
+          items: [ga4Item(product, 0, qty)]
+        }
+      });
       window.location.href = 'cart.html';
     });
   }
@@ -648,9 +803,31 @@ function renderCartPage(container) {
     `;
   }
 
-  container.querySelectorAll('[data-cart-remove]').forEach(btn => {
+  var subtotalNum = getCartSubtotal();
+  pushDataLayer({
+    event: 'view_cart',
+    ecommerce: {
+      currency: GA4_CURRENCY,
+      value: subtotalNum,
+      items: cart.map(function (item, i) { return ga4Item(item, i, item.quantity); })
+    }
+  });
+
+  container.querySelectorAll('[data-cart-remove]').forEach(function (btn, idx) {
     btn.addEventListener('click', function () {
-      removeFromCart(parseInt(this.getAttribute('data-cart-remove'), 10));
+      var index = parseInt(this.getAttribute('data-cart-remove'), 10);
+      var removed = cart[index];
+      removeFromCart(index);
+      if (removed) {
+        pushDataLayer({
+          event: 'remove_from_cart',
+          ecommerce: {
+            currency: GA4_CURRENCY,
+            value: removed.price * removed.quantity,
+            items: [ga4Item(removed, index, removed.quantity)]
+          }
+        });
+      }
       renderCartPage(container);
     });
   });
@@ -675,6 +852,17 @@ function handleCheckoutSubmit(e) {
     return;
   }
   sessionStorage.setItem('checkout_address', JSON.stringify({ name, email, address, city, pincode }));
+  var checkoutCart = getCart();
+  if (checkoutCart.length > 0) {
+    pushDataLayer({
+      event: 'add_shipping_info',
+      ecommerce: {
+        currency: GA4_CURRENCY,
+        value: getCartSubtotal(),
+        items: checkoutCart.map(function (item, i) { return ga4Item(item, i, item.quantity); })
+      }
+    });
+  }
   window.location.href = 'payment.html';
 }
 
@@ -688,8 +876,25 @@ function handlePaymentSubmit(e) {
   }
   const orderId = 'ORD_' + Date.now();
   const timestamp = new Date().toISOString();
+  var orderCart = getCart();
+  var orderValue = getCartSubtotal();
   setLastOrderId(orderId);
+  sessionStorage.setItem(STORAGE_KEYS.LAST_ORDER_DATA, JSON.stringify({
+    transaction_id: orderId,
+    value: orderValue,
+    items: orderCart.map(function (item, i) { return ga4Item(item, i, item.quantity); })
+  }));
   clearCart();
+
+  pushDataLayer({
+    event: 'add_payment_info',
+    ecommerce: {
+      currency: GA4_CURRENCY,
+      value: orderValue,
+      payment_type: method || 'unknown',
+      items: orderCart.map(function (item, i) { return ga4Item(item, i, item.quantity); })
+    }
+  });
 
   // Get checkout data (email, full name, city) from sessionStorage
   var checkoutData = { email: '', full_name: '', city: '' };
@@ -731,8 +936,9 @@ function handleSignUpSubmit(e) {
   }
   const result = signUp(email, password, name);
   if (result.success) {
+    pushDataLayer({ event: 'sign_up', method: 'email' });
     if (msgEl) { msgEl.textContent = 'Account created! Redirecting to Sign In...'; msgEl.className = 'alert alert-success'; }
-    setTimeout(() => { window.location.href = 'signin.html'; }, 1500);
+    setTimeout(function () { window.location.href = 'signin.html'; }, 1500);
   } else {
     if (msgEl) { msgEl.textContent = result.message; msgEl.className = 'alert alert-error'; }
   }
@@ -750,6 +956,7 @@ function handleSignInSubmit(e) {
   }
   const result = signIn(email, password);
   if (result.success) {
+    pushDataLayer({ event: 'login', method: 'email' });
     const redirect = new URLSearchParams(window.location.search).get('redirect') || 'index.html';
     window.location.href = redirect;
   } else {
@@ -771,6 +978,7 @@ function handleContactSubmit(e) {
   }
   const result = submitLead(name, email, subject, message);
   if (result.success) {
+    pushDataLayer({ event: 'generate_lead', value: 0, currency: GA4_CURRENCY });
     if (msgEl) { msgEl.textContent = 'Thank you! We have received your message (Lead ID: ' + result.lead_id + ').'; msgEl.className = 'alert alert-success'; }
     form.reset();
   }
