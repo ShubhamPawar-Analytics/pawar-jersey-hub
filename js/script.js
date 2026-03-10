@@ -167,6 +167,11 @@ function ga4Item(p, index, quantity) {
  * Push ecommerce event and clear previous ecommerce (GA4 best practice)
  */
 function pushDataLayer(obj) {
+  // #region agent log
+  if (obj && obj.ecommerce && obj.ecommerce.items) {
+    fetch('http://127.0.0.1:7249/ingest/c0390aac-679d-466b-a6b9-5887e1436b83',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b26670'},body:JSON.stringify({sessionId:'b26670',location:'script.js:pushDataLayer',message:'dataLayer ecommerce push',data:{event:obj.event,itemsLength:obj.ecommerce.items.length,itemIds:obj.ecommerce.items.map(function(i){return i.item_id;})},timestamp:Date.now(),hypothesisId:'H1'})}).catch(function(){});
+  }
+  // #endregion
   window.dataLayer.push(obj);
 }
 
@@ -326,10 +331,21 @@ function getCurrentUser() {
 }
 
 /**
- * Sign out
+ * Sign out (clears current user from localStorage; user_id remains in USERS until account is deleted)
  */
 function signOut() {
   localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
+}
+
+/**
+ * Delete account: remove current user from USERS and clear CURRENT_USER. User is no longer remembered.
+ */
+function deleteAccount() {
+  var current = getCurrentUser();
+  if (!current) return;
+  var users = getUsers().filter(function (u) { return u.user_id !== current.user_id; });
+  saveUsers(users);
+  signOut();
 }
 
 // ========== Leads / Contact (localStorage) ==========
@@ -662,6 +678,36 @@ function initWhenReady() {
     signInForm.addEventListener('submit', handleSignInSubmit);
   }
 
+  // Sign-in page: show signed-in state and Sign out / Delete account when user is remembered
+  var signedInBlock = document.getElementById('signin-signed-in-block');
+  if (signedInBlock) {
+    var currentUser = getCurrentUser();
+    if (currentUser) {
+      signedInBlock.classList.remove('hidden');
+      var emailEl = document.getElementById('signin-current-email');
+      if (emailEl) emailEl.textContent = currentUser.email;
+      if (signInForm) signInForm.classList.add('hidden');
+      var signOutLink = document.getElementById('signin-link-signout');
+      if (signOutLink) {
+        signOutLink.addEventListener('click', function (e) {
+          e.preventDefault();
+          signOut();
+          window.location.href = 'index.html';
+        });
+      }
+      var deleteLink = document.getElementById('signin-link-delete-account');
+      if (deleteLink) {
+        deleteLink.addEventListener('click', function (e) {
+          e.preventDefault();
+          if (confirm('Permanently delete your account? This cannot be undone.')) {
+            deleteAccount();
+            window.location.href = 'signin.html';
+          }
+        });
+      }
+    }
+  }
+
   // Contact form
   const contactForm = document.getElementById('contact-form');
   if (contactForm) {
@@ -936,7 +982,7 @@ function handleSignUpSubmit(e) {
   }
   const result = signUp(email, password, name);
   if (result.success) {
-    pushDataLayer({ event: 'sign_up', method: 'email' });
+    pushDataLayer({ event: 'sign_up', method: 'email', user_id: result.user.user_id });
     if (msgEl) { msgEl.textContent = 'Account created! Redirecting to Sign In...'; msgEl.className = 'alert alert-success'; }
     setTimeout(function () { window.location.href = 'signin.html'; }, 1500);
   } else {
@@ -956,7 +1002,7 @@ function handleSignInSubmit(e) {
   }
   const result = signIn(email, password);
   if (result.success) {
-    pushDataLayer({ event: 'login', method: 'email' });
+    pushDataLayer({ event: 'login', method: 'email', user_id: result.user.user_id });
     const redirect = new URLSearchParams(window.location.search).get('redirect') || 'index.html';
     window.location.href = redirect;
   } else {
@@ -978,8 +1024,8 @@ function handleContactSubmit(e) {
   }
   const result = submitLead(name, email, subject, message);
   if (result.success) {
-    pushDataLayer({ event: 'generate_lead', value: 0, currency: GA4_CURRENCY });
-    if (msgEl) { msgEl.textContent = 'Thank you! We have received your message (Lead ID: ' + result.lead_id + ').'; msgEl.className = 'alert alert-success'; }
+    pushDataLayer({ event: 'generate_lead', lead_id: result.lead_id });
+    if (msgEl) { msgEl.textContent = 'Thank you! We have received your message.'; msgEl.className = 'alert alert-success'; }
     form.reset();
   }
 }
