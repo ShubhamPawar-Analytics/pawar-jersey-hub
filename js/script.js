@@ -1212,7 +1212,7 @@ function handleSignUpSubmit(e) {
   const email = form.querySelector('#signup-email')?.value?.trim();
   const password = form.querySelector('#signup-password')?.value;
   const name = form.querySelector('#signup-name')?.value?.trim();
-  const msgEl = form.querySelector('.form-message');
+  const msgEl = document.getElementById('signup-message') || form.querySelector('.form-message');
   if (!email || !password) {
     if (msgEl) {
       msgEl.textContent = 'Email and password are required.';
@@ -1223,20 +1223,37 @@ function handleSignUpSubmit(e) {
   }
   const submitBtn = form.querySelector('button[type="submit"]');
   if (submitBtn) submitBtn.disabled = true;
-  signUp(email, password, name).then(function (result) {
-    if (submitBtn) submitBtn.disabled = false;
-    if (!msgEl) return;
-    msgEl.classList.remove('hidden');
-    if (result.success) {
-      pushDataLayer({ event: 'sign_up', method: 'email', user_id: result.user.user_id });
-      msgEl.textContent = 'Account created! Redirecting to Sign In...';
-      msgEl.className = 'alert alert-success';
-      setTimeout(function () { window.location.href = 'signin.html'; }, 1500);
-    } else {
-      msgEl.textContent = result.message;
-      msgEl.className = 'alert alert-error';
-    }
-  });
+  signUp(email, password, name)
+    .then(function (result) {
+      if (submitBtn) submitBtn.disabled = false;
+      if (result.success && msgEl) {
+        msgEl.textContent = 'Account created! Redirecting to Sign In...';
+        msgEl.className = 'alert alert-success';
+        msgEl.classList.remove('hidden');
+      } else if (msgEl && !result.success) {
+        msgEl.textContent = result.message || 'Could not create account.';
+        msgEl.className = 'alert alert-error';
+        msgEl.classList.remove('hidden');
+      }
+      if (result.success) {
+        var uid = result.user && result.user.user_id ? result.user.user_id : '';
+        try {
+          pushDataLayer({ event: 'sign_up', method: 'email', user_id: uid });
+        } catch (dlErr) {}
+        setTimeout(function () {
+          window.location.href = 'signin.html';
+        }, 1500);
+      }
+    })
+    .catch(function (err) {
+      if (submitBtn) submitBtn.disabled = false;
+      if (msgEl) {
+        msgEl.textContent = 'Something went wrong. Please try again.';
+        msgEl.className = 'alert alert-error';
+        msgEl.classList.remove('hidden');
+      }
+      if (typeof console !== 'undefined' && console.error) console.error(err);
+    });
 }
 
 function handleSignInSubmit(e) {
