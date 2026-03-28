@@ -135,11 +135,11 @@ const PRODUCTS = [
 // ========== Storage Keys ==========
 const STORAGE_KEYS = {
   CART: 'pawar_jersey_cart',
-  USERS: 'pawar_jersey_users',
-  CURRENT_USER: 'pawar_jersey_current_user',
   LEADS: 'pawar_jersey_leads',
   ORDER_ID: 'pawar_jersey_last_order_id',
-  LAST_ORDER_DATA: 'pawar_jersey_last_order_data'
+  LAST_ORDER_DATA: 'pawar_jersey_last_order_data',
+  /** Persisted Firebase UID for GTM (Custom JS / localStorage variable). Cleared on sign-out. */
+  USER_ID: 'pawar_jersey_user_id'
 };
 
 // ========== GA4 dataLayer (GTM) – e-commerce & conversion events ==========
@@ -173,6 +173,102 @@ function pushDataLayer(obj) {
   }
   // #endregion
   window.dataLayer.push(obj);
+}
+
+// ========== GA / GTM: persistent user_id (Firebase UID) ==========
+var lastSyncedAnalyticsUserId = undefined;
+var gtagUserIdPollTimer = null;
+
+function readStoredAnalyticsUserId() {
+  try {
+    var v = localStorage.getItem(STORAGE_KEYS.USER_ID) || localStorage.getItem('user_id');
+    return v && String(v).trim() ? String(v).trim() : '';
+  } catch (e) {
+    return '';
+  }
+}
+
+function persistAnalyticsUserIdToStorage(uid) {
+  var v = uid && String(uid).trim() ? String(uid).trim() : '';
+  if (!v) return;
+  try {
+    localStorage.setItem(STORAGE_KEYS.USER_ID, v);
+    localStorage.setItem('user_id', v);
+  } catch (e) {}
+}
+
+function clearAnalyticsUserIdStorage() {
+  try {
+    localStorage.removeItem(STORAGE_KEYS.USER_ID);
+    localStorage.removeItem('user_id');
+  } catch (e) {}
+}
+
+function tryGtagUserIdPoll(uid) {
+  var attempts = 0;
+  if (gtagUserIdPollTimer) {
+    clearInterval(gtagUserIdPollTimer);
+    gtagUserIdPollTimer = null;
+  }
+  gtagUserIdPollTimer = setInterval(function () {
+    attempts++;
+    if (typeof window.gtag === 'function') {
+      clearInterval(gtagUserIdPollTimer);
+      gtagUserIdPollTimer = null;
+      window.gtag('set', { user_id: uid || '' });
+    } else if (attempts >= 40) {
+      clearInterval(gtagUserIdPollTimer);
+      gtagUserIdPollTimer = null;
+    }
+  }, 100);
+}
+
+/**
+ * Pushes user_id early for GTM/GA4. Named event so you can add a trigger in GTM:
+ * Custom Event = user_id_available, and map user_id to GA4 Configuration → user_id.
+ */
+function pushAnalyticsUserIdToDataLayer(uid) {
+  var v = uid && String(uid).trim() ? String(uid).trim() : '';
+  if (!v) return;
+  pushDataLayer({ event: 'user_id_available', user_id: v });
+  tryGtagUserIdPoll(v);
+}
+
+function pushAnalyticsUserIdCleared() {
+  pushDataLayer({ event: 'user_id_cleared', user_id: '' });
+  tryGtagUserIdPoll(null);
+}
+
+(function bootstrapAnalyticsUserIdFromStorage() {
+  var stored = readStoredAnalyticsUserId();
+  if (!stored) return;
+  lastSyncedAnalyticsUserId = stored;
+  pushAnalyticsUserIdToDataLayer(stored);
+})();
+
+function syncAnalyticsUserIdFromAuth(fbUser) {
+  var mapped = mapFirebaseUser(fbUser);
+  if (mapped && mapped.user_id) {
+    persistAnalyticsUserIdToStorage(mapped.user_id);
+    if (lastSyncedAnalyticsUserId !== mapped.user_id) {
+      lastSyncedAnalyticsUserId = mapped.user_id;
+      pushAnalyticsUserIdToDataLayer(mapped.user_id);
+    }
+  } else {
+    clearAnalyticsUserIdStorage();
+    if (typeof lastSyncedAnalyticsUserId === 'string') {
+      pushAnalyticsUserIdCleared();
+    }
+    lastSyncedAnalyticsUserId = null;
+  }
+}
+
+var analyticsAuthListenerRegistered = false;
+
+function registerAnalyticsAuthSync() {
+  if (analyticsAuthListenerRegistered || !pawarFirebaseAuth) return;
+  analyticsAuthListenerRegistered = true;
+  pawarFirebaseAuth.onAuthStateChanged(syncAnalyticsUserIdFromAuth);
 }
 
 // ========== Cart (localStorage) ==========
@@ -261,7 +357,15 @@ function updateCartCountInHeader() {
   }
 }
 
-// ========== Auth (localStorage) ==========
+// ========== Auth (Firebase) ==========
+/**
+ * Normalize email for Firebase email/password sign-in.
+ */
+function normalizeAuthEmail(email) {
+  if (!email || typeof email !== 'string') return '';
+  return email.trim().toLowerCase();
+}
+
 /**
  * Generate unique ID for user or lead
  */
@@ -269,83 +373,173 @@ function generateId(prefix) {
   return prefix + '_' + Date.now() + '_' + Math.random().toString(36).slice(2, 9);
 }
 
-/**
- * Get all users from localStorage
- */
-function getUsers() {
+function isFirebaseConfigured() {
+  var c = typeof window !== 'undefined' && window.FIREBASE_CONFIG;
+  if (!c || !c.apiKey || !c.projectId) return false;
+  if (c.apiKey === 'YOUR_API_KEY' || c.projectId === 'YOUR_PROJECT_ID') return false;
+  return true;
+}
+
+var pawarFirebaseAuth = null;
+
+function initFirebaseAuth() {
+  if (!isFirebaseConfigured()) return false;
+  if (typeof firebase === 'undefined') {
+    console.warn('Pawar Jersey Hub: Firebase SDK not loaded. Add firebase scripts before script.js.');
+    return false;
+  }
+  if (!firebase.apps.length) {
+    firebase.initializeApp(window.FIREBASE_CONFIG);
+  }
+  pawarFirebaseAuth = firebase.auth();
+  pawarFirebaseAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(function () {});
   try {
-    const data = localStorage.getItem(STORAGE_KEYS.USERS);
-    return data ? JSON.parse(data) : [];
-  } catch (e) {
-    return [];
+    localStorage.removeItem('pawar_jersey_users');
+    localStorage.removeItem('pawar_jersey_current_user');
+  } catch (e) {}
+  registerAnalyticsAuthSync();
+  return true;
+}
+
+initFirebaseAuth();
+
+function mapFirebaseUser(fbUser) {
+  if (!fbUser) return null;
+  return {
+    user_id: fbUser.uid,
+    email: normalizeAuthEmail(fbUser.email || ''),
+    name: (fbUser.displayName || '').trim()
+  };
+}
+
+function mapFirebaseAuthError(err) {
+  var code = err && err.code ? err.code : '';
+  switch (code) {
+    case 'auth/email-already-in-use':
+      return 'This email is already registered. Use Sign In with the same email and password—do not create another account.';
+    case 'auth/invalid-email':
+      return 'Invalid email address.';
+    case 'auth/weak-password':
+      return 'Password should be at least 6 characters.';
+    case 'auth/user-disabled':
+      return 'This account has been disabled.';
+    case 'auth/user-not-found':
+    case 'auth/wrong-password':
+    case 'auth/invalid-credential':
+      return 'Invalid email or password. If you already created an account, use Sign In (not Sign Up).';
+    case 'auth/unauthorized-domain':
+      return 'This site’s domain is not allowed. In Firebase Console → Authentication → Settings → Authorized domains, add your exact hostname (e.g. yourname.github.io). Do not include https or paths.';
+    case 'auth/operation-not-allowed':
+      return 'Email/password sign-in is disabled. In Firebase Console → Authentication → Sign-in method, enable Email/Password.';
+    case 'auth/api-key-not-valid':
+    case 'auth/invalid-api-key':
+      return 'Invalid API key. Check js/firebase-config.js matches your Firebase project’s Web app config.';
+    case 'auth/network-request-failed':
+      return 'Network error. Check your connection and try again.';
+    case 'auth/too-many-requests':
+      return 'Too many attempts. Try again later.';
+    case 'auth/requires-recent-login':
+      return 'For security, sign out, sign in again, then try deleting your account.';
+    default:
+      return (err && err.message) || 'Something went wrong. Please try again.';
   }
 }
 
 /**
- * Save users array
- */
-function saveUsers(users) {
-  localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
-}
-
-/**
- * Sign up: create user with unique user_id, store in localStorage
+ * Sign up (Firebase). Signs the user out after creation so they complete Sign In on the next page.
+ * @returns {Promise<{success:boolean,message?:string,user?:object}>}
  */
 function signUp(email, password, name) {
-  const users = getUsers();
-  if (users.some(u => u.email === email)) {
-    return { success: false, message: 'Email already registered.' };
+  if (!pawarFirebaseAuth) {
+    return Promise.resolve({
+      success: false,
+      message: 'Firebase is not configured. Paste your web app keys in js/firebase-config.js (see file comments).'
+    });
   }
-  const user = {
-    user_id: generateId('user'),
-    email,
-    password,
-    name: name || ''
-  };
-  users.push(user);
-  saveUsers(users);
-  return { success: true, user };
+  var normalized = normalizeAuthEmail(email);
+  if (!normalized) {
+    return Promise.resolve({ success: false, message: 'Email is required.' });
+  }
+  return pawarFirebaseAuth
+    .createUserWithEmailAndPassword(normalized, password)
+    .then(function (cred) {
+      var u = cred.user;
+      if (name && u) {
+        return u.updateProfile({ displayName: name }).then(function () {
+          return cred;
+        });
+      }
+      return cred;
+    })
+    .then(function (cred) {
+      var mapped = mapFirebaseUser(cred.user);
+      return pawarFirebaseAuth.signOut().then(function () {
+        return { success: true, user: mapped };
+      });
+    })
+    .catch(function (err) {
+      return { success: false, message: mapFirebaseAuthError(err) };
+    });
 }
 
 /**
- * Sign in: check email/password, set current user in localStorage
+ * Sign in (Firebase)
+ * @returns {Promise<{success:boolean,message?:string,user?:object}>}
  */
 function signIn(email, password) {
-  const users = getUsers();
-  const user = users.find(u => u.email === email && u.password === password);
-  if (!user) return { success: false, message: 'Invalid email or password.' };
-  localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(user));
-  return { success: true, user };
+  if (!pawarFirebaseAuth) {
+    return Promise.resolve({
+      success: false,
+      message: 'Firebase is not configured. Paste your web app keys in js/firebase-config.js.'
+    });
+  }
+  var normalized = normalizeAuthEmail(email);
+  if (!normalized) {
+    return Promise.resolve({ success: false, message: 'Email is required.' });
+  }
+  return pawarFirebaseAuth
+    .signInWithEmailAndPassword(normalized, password)
+    .then(function (cred) {
+      return { success: true, user: mapFirebaseUser(cred.user) };
+    })
+    .catch(function (err) {
+      return { success: false, message: mapFirebaseAuthError(err) };
+    });
 }
 
 /**
- * Get current logged-in user
+ * Current Firebase user as { user_id, email, name } or null
  */
 function getCurrentUser() {
-  try {
-    const data = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
-    return data ? JSON.parse(data) : null;
-  } catch (e) {
-    return null;
-  }
+  if (!pawarFirebaseAuth) return null;
+  return mapFirebaseUser(pawarFirebaseAuth.currentUser);
 }
 
 /**
- * Sign out (clears current user from localStorage; user_id remains in USERS until account is deleted)
+ * Sign out
+ * @returns {Promise<void>}
  */
 function signOut() {
-  localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
+  if (!pawarFirebaseAuth) return Promise.resolve();
+  return pawarFirebaseAuth.signOut();
 }
 
 /**
- * Delete account: remove current user from USERS and clear CURRENT_USER. User is no longer remembered.
+ * Delete Firebase account (requires recent sign-in; may fail with auth/requires-recent-login)
+ * @returns {Promise<{success:boolean,message?:string}>}
  */
 function deleteAccount() {
-  var current = getCurrentUser();
-  if (!current) return;
-  var users = getUsers().filter(function (u) { return u.user_id !== current.user_id; });
-  saveUsers(users);
-  signOut();
+  if (!pawarFirebaseAuth || !pawarFirebaseAuth.currentUser) {
+    return Promise.resolve({ success: false, message: 'Not signed in.' });
+  }
+  return pawarFirebaseAuth.currentUser
+    .delete()
+    .then(function () {
+      return { success: true };
+    })
+    .catch(function (err) {
+      return { success: false, message: mapFirebaseAuthError(err) };
+    });
 }
 
 // ========== Leads / Contact (localStorage) ==========
@@ -654,10 +848,20 @@ function initWhenReady() {
     }
   }
 
-  // Checkout form submit
+  // Checkout form submit + prefill name/email when signed in (Firebase restores session async)
   const checkoutForm = document.getElementById('checkout-form');
   if (checkoutForm) {
     checkoutForm.addEventListener('submit', handleCheckoutSubmit);
+    if (pawarFirebaseAuth) {
+      pawarFirebaseAuth.onAuthStateChanged(function (u) {
+        var cu = mapFirebaseUser(u);
+        if (!cu) return;
+        var em = checkoutForm.querySelector('#checkout-email');
+        var nm = checkoutForm.querySelector('#checkout-name');
+        if (em && !em.value) em.value = cu.email;
+        if (nm && !nm.value && cu.name) nm.value = cu.name;
+      });
+    }
   }
 
   // Payment form submit
@@ -670,6 +874,13 @@ function initWhenReady() {
   const signUpForm = document.getElementById('signup-form');
   if (signUpForm) {
     signUpForm.addEventListener('submit', handleSignUpSubmit);
+    var signupCfgMsg = document.getElementById('signup-message');
+    if (!isFirebaseConfigured() && signupCfgMsg) {
+      signupCfgMsg.textContent =
+        'Firebase is not configured. Paste your web app keys in js/firebase-config.js and enable Email/Password in Firebase Console.';
+      signupCfgMsg.className = 'alert alert-error';
+      signupCfgMsg.classList.remove('hidden');
+    }
   }
 
   // Sign in form
@@ -678,31 +889,54 @@ function initWhenReady() {
     signInForm.addEventListener('submit', handleSignInSubmit);
   }
 
-  // Sign-in page: show signed-in state and Sign out / Delete account when user is remembered
+  // Sign-in page: Firebase auth state + Sign out / Delete account
   var signedInBlock = document.getElementById('signin-signed-in-block');
-  if (signedInBlock) {
-    var currentUser = getCurrentUser();
-    if (currentUser) {
-      signedInBlock.classList.remove('hidden');
-      var emailEl = document.getElementById('signin-current-email');
-      if (emailEl) emailEl.textContent = currentUser.email;
-      if (signInForm) signInForm.classList.add('hidden');
+  if (signedInBlock && signInForm) {
+    var signinCfgMsg = document.getElementById('signin-message');
+    if (!isFirebaseConfigured() && signinCfgMsg) {
+      signinCfgMsg.textContent =
+        'Firebase is not configured. Paste your web app keys in js/firebase-config.js and enable Email/Password in Firebase Console.';
+      signinCfgMsg.className = 'alert alert-error';
+      signinCfgMsg.classList.remove('hidden');
+    } else if (isFirebaseConfigured() && !pawarFirebaseAuth && signinCfgMsg) {
+      signinCfgMsg.textContent =
+        'Firebase SDK did not load. Check your network, disable blockers for this page, and ensure script tags load before js/script.js.';
+      signinCfgMsg.className = 'alert alert-error';
+      signinCfgMsg.classList.remove('hidden');
+    } else if (pawarFirebaseAuth) {
+      pawarFirebaseAuth.onAuthStateChanged(function (fbUser) {
+        var currentUser = mapFirebaseUser(fbUser);
+        if (currentUser) {
+          signedInBlock.classList.remove('hidden');
+          var emailEl = document.getElementById('signin-current-email');
+          if (emailEl) emailEl.textContent = currentUser.email;
+          signInForm.classList.add('hidden');
+        } else {
+          signedInBlock.classList.add('hidden');
+          signInForm.classList.remove('hidden');
+        }
+      });
       var signOutLink = document.getElementById('signin-link-signout');
       if (signOutLink) {
         signOutLink.addEventListener('click', function (e) {
           e.preventDefault();
-          signOut();
-          window.location.href = 'index.html';
+          signOut().then(function () {
+            window.location.href = 'index.html';
+          });
         });
       }
       var deleteLink = document.getElementById('signin-link-delete-account');
       if (deleteLink) {
         deleteLink.addEventListener('click', function (e) {
           e.preventDefault();
-          if (confirm('Permanently delete your account? This cannot be undone.')) {
-            deleteAccount();
-            window.location.href = 'signin.html';
-          }
+          if (!confirm('Permanently delete your account? This cannot be undone.')) return;
+          deleteAccount().then(function (res) {
+            if (res.success) {
+              window.location.href = 'signin.html';
+            } else {
+              alert(res.message || 'Could not delete account. Sign in again and retry.');
+            }
+          });
         });
       }
     }
@@ -956,10 +1190,13 @@ function handlePaymentSubmit(e) {
 
   // Log order to Google Sheet if ORDER_LOG_WEB_APP_URL is set
   if (ORDER_LOG_WEB_APP_URL && typeof fetch !== 'undefined') {
+    var loggedIn = getCurrentUser();
+    var firebaseUid = loggedIn && loggedIn.user_id ? loggedIn.user_id : '';
     var q = 'order_id=' + encodeURIComponent(orderId) + '&timestamp=' + encodeURIComponent(timestamp) +
       '&email=' + encodeURIComponent(checkoutData.email) +
       '&full_name=' + encodeURIComponent(checkoutData.full_name) +
-      '&city=' + encodeURIComponent(checkoutData.city);
+      '&city=' + encodeURIComponent(checkoutData.city) +
+      '&firebase_uid=' + encodeURIComponent(firebaseUid);
     var url = ORDER_LOG_WEB_APP_URL + '?' + q;
     fetch(url, { mode: 'no-cors' }).catch(function () {}).finally(function () {
       window.location.href = 'thank-you.html';
@@ -977,17 +1214,29 @@ function handleSignUpSubmit(e) {
   const name = form.querySelector('#signup-name')?.value?.trim();
   const msgEl = form.querySelector('.form-message');
   if (!email || !password) {
-    if (msgEl) { msgEl.textContent = 'Email and password are required.'; msgEl.className = 'alert alert-error'; }
+    if (msgEl) {
+      msgEl.textContent = 'Email and password are required.';
+      msgEl.className = 'alert alert-error';
+      msgEl.classList.remove('hidden');
+    }
     return;
   }
-  const result = signUp(email, password, name);
-  if (result.success) {
-    pushDataLayer({ event: 'sign_up', method: 'email', user_id: result.user.user_id });
-    if (msgEl) { msgEl.textContent = 'Account created! Redirecting to Sign In...'; msgEl.className = 'alert alert-success'; }
-    setTimeout(function () { window.location.href = 'signin.html'; }, 1500);
-  } else {
-    if (msgEl) { msgEl.textContent = result.message; msgEl.className = 'alert alert-error'; }
-  }
+  const submitBtn = form.querySelector('button[type="submit"]');
+  if (submitBtn) submitBtn.disabled = true;
+  signUp(email, password, name).then(function (result) {
+    if (submitBtn) submitBtn.disabled = false;
+    if (!msgEl) return;
+    msgEl.classList.remove('hidden');
+    if (result.success) {
+      pushDataLayer({ event: 'sign_up', method: 'email', user_id: result.user.user_id });
+      msgEl.textContent = 'Account created! Redirecting to Sign In...';
+      msgEl.className = 'alert alert-success';
+      setTimeout(function () { window.location.href = 'signin.html'; }, 1500);
+    } else {
+      msgEl.textContent = result.message;
+      msgEl.className = 'alert alert-error';
+    }
+  });
 }
 
 function handleSignInSubmit(e) {
@@ -997,17 +1246,41 @@ function handleSignInSubmit(e) {
   const password = form.querySelector('#signin-password')?.value;
   const msgEl = form.querySelector('.form-message');
   if (!email || !password) {
-    if (msgEl) { msgEl.textContent = 'Email and password are required.'; msgEl.className = 'alert alert-error'; }
+    if (msgEl) {
+      msgEl.textContent = 'Email and password are required.';
+      msgEl.className = 'alert alert-error';
+      msgEl.classList.remove('hidden');
+    }
     return;
   }
-  const result = signIn(email, password);
-  if (result.success) {
-    pushDataLayer({ event: 'login', method: 'email', user_id: result.user.user_id });
-    const redirect = new URLSearchParams(window.location.search).get('redirect') || 'index.html';
-    window.location.href = redirect;
-  } else {
-    if (msgEl) { msgEl.textContent = result.message; msgEl.className = 'alert alert-error'; }
-  }
+  const submitBtn = form.querySelector('button[type="submit"]');
+  if (submitBtn) submitBtn.disabled = true;
+  signIn(email, password).then(function (result) {
+    if (submitBtn) submitBtn.disabled = false;
+    if (!msgEl) {
+      if (result.success) {
+        persistAnalyticsUserIdToStorage(result.user.user_id);
+        lastSyncedAnalyticsUserId = result.user.user_id;
+        pushAnalyticsUserIdToDataLayer(result.user.user_id);
+        pushDataLayer({ event: 'login', method: 'email', user_id: result.user.user_id });
+        const redirect = new URLSearchParams(window.location.search).get('redirect') || 'index.html';
+        window.location.href = redirect;
+      }
+      return;
+    }
+    msgEl.classList.remove('hidden');
+    if (result.success) {
+      persistAnalyticsUserIdToStorage(result.user.user_id);
+      lastSyncedAnalyticsUserId = result.user.user_id;
+      pushAnalyticsUserIdToDataLayer(result.user.user_id);
+      pushDataLayer({ event: 'login', method: 'email', user_id: result.user.user_id });
+      const redirect = new URLSearchParams(window.location.search).get('redirect') || 'index.html';
+      window.location.href = redirect;
+    } else {
+      msgEl.textContent = result.message;
+      msgEl.className = 'alert alert-error';
+    }
+  });
 }
 
 function handleContactSubmit(e) {

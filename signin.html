@@ -36,6 +36,10 @@
   <main class="main-content" id="main-content" data-page="signin">
     <section class="signin-section" id="signin-section" data-section="signin">
       <h1 class="page-title signin-page-title" id="page-title-signin">Sign In</h1>
+      <p class="auth-local-notice" role="note">Your account is stored in <strong>Firebase</strong> (cloud). If you cleared browser data, use <strong>Sign In</strong> here with the same email and password—do not use Sign Up again. Add your exact GitHub Pages hostname under Firebase → Authentication → Settings → <strong>Authorized domains</strong> (e.g. <code>username.github.io</code>, no <code>https://</code>).</p>
+      <div id="signin-signed-in-block" class="signin-signed-in-block hidden" data-section="signed_in_state">
+        <p>Signed in as <strong id="signin-current-email"></strong>. <a href="#" id="signin-link-signout" data-cta="signout">Sign out</a> | <a href="#" id="signin-link-delete-account" data-cta="delete_account">Delete account</a></p>
+      </div>
       <form id="sign-in-form" class="form-max-width signin-form" data-step="signin_form" data-section="signin_form">
         <div id="signin-message" class="form-message hidden" role="alert" data-message-type="signin_feedback"></div>
         <div class="form-group">
@@ -74,6 +78,9 @@
     </div>
   </footer>
 
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
   <script src="js/script.js"></script>
 </body>
 </html>

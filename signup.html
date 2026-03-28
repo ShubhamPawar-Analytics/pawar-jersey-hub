@@ -36,7 +36,7 @@
   <main class="main-content" id="main-content" data-page="signup">
     <section class="signup-section" id="signup-section" data-section="signup">
       <h1 class="page-title signup-page-title" id="page-title-signup">Create Account</h1>
-      <p class="signup-intro" id="signup-intro">Sign up to get a unique user_id. Data stored in localStorage only.</p>
+      <p class="signup-intro auth-local-notice" id="signup-intro">Create a Firebase account (email/password). Your user ID is stored in the cloud so you can sign in from other devices after you configure <code>js/firebase-config.js</code>.</p>
       <form id="signup-form" class="form-max-width signup-form" data-step="signup_form" data-section="signup_form">
         <div id="signup-message" class="form-message hidden" role="alert" data-message-type="signup_feedback"></div>
         <div class="form-group">
@@ -79,6 +79,9 @@
     </div>
   </footer>
 
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
   <script src="js/script.js"></script>
 </body>
 </html>

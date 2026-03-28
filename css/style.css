@@ -693,7 +693,19 @@ img {
 }
 
 .signin-page-title {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.auth-local-notice {
+  font-size: 0.9rem;
+  color: var(--text-light);
+  line-height: 1.5;
+  max-width: 500px;
+  margin-bottom: 1.25rem;
+  padding: 0.75rem 1rem;
+  background: var(--bg-light);
+  border-radius: var(--radius);
+  border-left: 3px solid var(--primary);
 }
 
 .signin-form {
@@ -709,6 +721,18 @@ img {
 }
 
 .signin-signup-prompt a {
+  font-weight: 600;
+}
+
+.signin-signed-in-block {
+  margin-bottom: 1.25rem;
+  padding: 1rem;
+  background: var(--surface);
+  border-radius: 8px;
+  color: var(--text);
+}
+
+.signin-signed-in-block a {
   font-weight: 600;
 }
 

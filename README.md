@@ -1,30 +1,49 @@
-# Log orders to Google Sheets
+# Pawar's Jersey Hub
 
-When a customer places an order, the site sends **Order ID**, **Timestamp**, **Email**, **Full Name**, and **City** to a Google Sheet (from the checkout form).
+A simple multi-page e-commerce website for IPL jerseys, built with HTML, CSS, and vanilla JavaScript.
 
-## Setup
+## Folder structure
 
-1. **Create a Google Sheet**  
-   - Go to [sheets.new](https://sheets.new).  
-   - (Optional) In row 1, add headers: `Order ID` | `Timestamp` | `Email` | `Full Name` | `City`. The script will add them if the sheet is empty.
+```
+Website/
+├── index.html          # Homepage
+├── products.html       # Product listing (all 10 jerseys)
+├── product-detail.html # Product detail (?id=P001 etc.)
+├── cart.html          # Cart
+├── checkout.html      # Checkout
+├── payment.html       # Payment
+├── thank-you.html     # Thank you / order confirmation
+├── signin.html        # Sign in
+├── signup.html        # Sign up
+├── contact.html       # Contact us
+├── README.md
+├── css/
+│   └── style.css      # Main stylesheet
+└── js/
+    ├── firebase-config.js  # Firebase web config (paste keys from Firebase Console)
+    └── script.js           # Product data, cart, Firebase auth, leads
+```
 
-2. **Add the script**  
-   - In the sheet: **Extensions → Apps Script**.  
-   - Replace the default `function myFunction() { }` with the code from `OrderLog.gs` in this folder (copy the whole file).  
-   - Save (Ctrl+S).
+## How to run
 
-3. **Deploy as Web App**  
-   - Click **Deploy → New deployment**.  
-   - Click the gear icon, choose **Web app**.  
-   - Set **Execute as**: Me.  
-   - Set **Who has access**: Anyone (so your website can send requests).  
-   - Click **Deploy**, authorize if asked, then copy the **Web app URL** (looks like `https://script.google.com/macros/s/.../exec`).
+Open `index.html` in a browser (double-click or use “Open with Live Server” in VS Code). No build step required.
 
-4. **Add the URL to your website**  
-   - Open `js/script.js` in your project.  
-   - Find the config: `ORDER_LOG_WEB_APP_URL`.  
-   - Paste your Web app URL between the quotes, e.g.:  
-     `const ORDER_LOG_WEB_APP_URL = 'https://script.google.com/macros/s/xxxxxxxxxx/exec';`  
-   - Save.
+## Features
 
-After this, each time an order is placed (Place Order on the Payment page), the site will send the order ID, timestamp, email, full name, and city to your sheet and a new row will be added.
+- **Theme:** IPL jerseys store – brand: Pawar's Jersey Hub
+- **Pages:** Home, Products, Product detail, Cart, Checkout, Payment, Thank you, Sign in, Sign up, Contact
+- **Products:** 10 IPL jerseys with product_id, team name, jersey name, price, placeholder image, description, sizes
+- **Cart:** Stored in `localStorage`; persists across pages
+- **Auth:** Firebase Authentication (email/password); configure `js/firebase-config.js` and enable Email/Password + authorized domains in Firebase Console
+- **Contact:** Form creates a unique `lead_id` on submit; stored in `localStorage`
+- **Funnel:** Listing → Product → Cart → Checkout → Payment → Thank you
+
+## GA4 readiness
+
+Elements use unique IDs, clear class names, and data attributes for easier tracking:
+
+- `data-product_id`, `data-product_name`, `data-price` on product cards and cart items
+- `data-cta` on buttons and links (e.g. `add_to_cart`, `proceed_checkout`)
+- `data-step` for funnel steps (e.g. `product_detail`, `checkout_form`, `thank_you`)
+
+You can add GA4 tags later using these attributes.
